@@ -1,7 +1,8 @@
 import pyautogui
 import keyboard
 import socket
-
+import json
+import os
 s = socket.socket()
 
 v = '0.0.1' #woah
@@ -10,6 +11,25 @@ purple = "\033[0;35m"
 yellow = "\033[1;33"
 green = "\033[1;36"
 blank = "\033[0m"
+
+appdata = os.getenv('APPDATA')
+config_path = appdata + "\klipy.json"
+
+def write_config(arg):
+    with open(config_path, "w") as f:
+        config = json.dumps(arg)
+        f.write(str(config))
+        print("Writted to config")
+
+print(config_path)
+#check for config
+if os.path.exists(config_path) == False:
+    print("Config not found, creating config...")
+    config = {"host" : "", "port" : 0, "tps" : 60, "fps" : 0}
+    write_config(config)
+else:
+    print(f"Config found at {config_path}")
+    pass
 
 
 print(
@@ -55,6 +75,7 @@ def host(port):
     print(f"  > Hosting at {port}")
 
 #ansi colors tui
+
 """
 print(f"{yellow}  > What now? <{blank}")
 print(f"{green}  1. Connect {blank}")
