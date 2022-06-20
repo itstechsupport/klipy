@@ -5,6 +5,22 @@ import json
 import os
 s = socket.socket()
 
+#temp
+import pygame
+
+
+
+
+X = 1280
+Y = 720
+
+
+display_surface = pygame.display.set_mode((X, Y ))
+
+
+
+
+
 v = '0.0.1' #woah
 
 purple = "\033[0;35m"
@@ -15,6 +31,7 @@ blank = "\033[0m"
 appdata = os.getenv('APPDATA')
 config_path = appdata + "\klipy.json"
 
+#write and read config from file
 def write_config(arg):
     config = json.dumps(arg)
     try:
@@ -28,22 +45,23 @@ def write_config(arg):
 def read_config():
     try:
         config = json.loads(config_path)
-        print("Successfully readed config")
+        print("Successfully read config")
+        
         return config
     except Exception as e:
         print(f"Couldn't read config! {e}")
         pass
 
-print(config_path)
-#check for config
-if os.path.exists(config_path) == False:
-    print("Config not found, creating config...")
-    config = {"host" : "", "port" : 0, "tps" : 60, "fps" : 0}
-    write_config(config)
-    read_config()
-else:
-    print(f"Config found at {config_path}")
-    pass
+#setup config
+def config_setup():
+    if os.path.exists(config_path) == False:
+        print("Config not found, creating config...")
+        config = {"host" : "", "port" : 0, "tps" : 60, "fps" : 0}
+        write_config(config)
+        read_config()
+    else:
+        print(f"Config found at {config_path}")
+        pass
 
 
 print(
@@ -67,12 +85,15 @@ print(
     """
 )
 
-def start():
+
+def client_loop():
+    pygame.init()
     while True:
         key = keyboard.read_key()
-        print(key)
+        screen = s.recv(1024)
+        display_surface.blit(pygame.image.load(screen), (0, 0))
+        pygame.display.update()
         s.send(key.encode())
-        
 
 def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
@@ -83,7 +104,7 @@ def connect(host, port):
         print("  > Enter valid hostname and port!")
         print(e)
 
-    start()
+    client_loop()
 
 def host(port):
     print(f"  > Hosting at {port}")
@@ -98,23 +119,46 @@ print(f"{green}  3. Settings {blank}")
 print(f"{yellow}  > {blank}")
 """
 #tui
-print(f"  > Select (1-3) <")
-print(f"  1. Connect ")
-print(f"  2. Host ")
-print(f"  3. Settings ")
-x = input("  > ")
 
-if x == "1":
-    print("  > Enter hostname:")
-    host = input("  > ")
-    print("  > Enter port:")
-    port = input("  > ")
-    if (port.isdigit() == False):
+
+def menu():
+    print(f"  > Select (1-3) <")
+    print(f"  1. Connect ")
+    print(f"  2. Host ")
+    print(f"  3. Settings ")
+    x = input("  > ")
+    if x == "1":
+        print("  > Enter hostname:")
+        host = input("  > ")
         print("  > Enter port:")
         port = input("  > ")
+        if (port.isdigit() == False):
+            print("  > Enter port:")
+            port = input("  > ")
 
-    connect(host=host, port=int(port))
-if x == "2":
-    print("  > Enter port:")
-    port = input("  > ")
-    host(port=port)
+        connect(host=host, port=int(port))
+    if x == "2":
+        print("  > Enter port:")
+        port = input("  > ")
+        host(port=port)
+    if x == "3":
+        print(f"  > Select (1-3) <")
+        print(f"  1. Delete Config ")
+        print(f"  2. Change TPS ")
+        print(f"  3. Change FPS ")
+        y = input("  > ")
+        if y == 1:
+            os.remove(config_path)
+            print("Config removed!")
+            z = input("Do you want to run config setup again? [y/n]")
+            if z == "y":
+                config_setup()
+                menu()
+            if z == "n":
+                pass
+                menu()
+            
+
+
+#run the menu
+menu()
