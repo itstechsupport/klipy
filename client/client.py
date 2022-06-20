@@ -16,10 +16,23 @@ appdata = os.getenv('APPDATA')
 config_path = appdata + "\klipy.json"
 
 def write_config(arg):
-    with open(config_path, "w") as f:
-        config = json.dumps(arg)
-        f.write(str(config))
-        print("Writted to config")
+    config = json.dumps(arg)
+    try:
+        with open(config_path, "w") as f:
+            f.write(str(config))
+            print("Successfully writted to config")
+            pass
+    except Exception as e:
+        print(f"Couldn't write to config! {e}")
+
+def read_config():
+    try:
+        config = json.loads(config_path)
+        print("Successfully readed config")
+        return config
+    except Exception as e:
+        print(f"Couldn't read config! {e}")
+        pass
 
 print(config_path)
 #check for config
@@ -27,6 +40,7 @@ if os.path.exists(config_path) == False:
     print("Config not found, creating config...")
     config = {"host" : "", "port" : 0, "tps" : 60, "fps" : 0}
     write_config(config)
+    read_config()
 else:
     print(f"Config found at {config_path}")
     pass
