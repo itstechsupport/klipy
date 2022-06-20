@@ -3,6 +3,10 @@ import keyboard
 import socket
 import json
 import os
+
+from PIL import Image
+from io import BytesIO
+
 s = socket.socket()
 
 #temp
@@ -21,7 +25,8 @@ display_surface = pygame.display.set_mode((X, Y ))
 
 
 
-v = '0.0.1' #woah
+v = '0.0.2' #woah
+
 
 purple = "\033[0;35m"
 yellow = "\033[1;33"
@@ -89,10 +94,23 @@ print(
 def client_loop():
     pygame.init()
     while True:
-        key = keyboard.read_key()
+        #receive screen shot
         screen = s.recv(1024)
+
+        #encode screenshot
+        stream = BytesIO(screen)
+
+        image = Image.open(stream).convert("RGBA")
+        stream.close()
+        image.show()
+
+        """
         display_surface.blit(pygame.image.load(screen), (0, 0))
         pygame.display.update()
+        """
+
+        #send pressed key
+        key = keyboard.read_key()
         s.send(key.encode())
 
 def connect(host, port):
