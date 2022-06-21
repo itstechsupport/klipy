@@ -3,34 +3,46 @@ import socket
 import asyncio
 from PIL import Image, ImageFile
 from io import BytesIO
-
+import os
+from multiprocessing import Process
 
 s = socket.socket()
-print ("Socket successfully created")
 
 port = 22371
 
 s.bind(('', port))
-print ("Socket binded to %s" %(port))
-
-s.listen(5)
-print ("Socket is listening")
+print(f'   > Server running at {port}')
+print('   > Listening for connection...')
+s.listen(1)
 
 c, addr = s.accept()
-while True:
+print(f'   > Got connection form {addr}')
+
+def screen_loop():
     #encode
     screen = pyautogui.screenshot()
-    screen.save("img.jpeg", optimize = True, quality = 5)
+    screen.save('img.jpeg', optimize = True, quality = 7)
     screen = open('img.jpeg', 'rb')
+    size = os.path.getsize('img.jpeg')
+    print(size)
+    #c.send(str(size).encode())
     scren = screen.read()
     bytes = bytearray(scren)
-
+    
     #send
     c.send(bytes)
 
+def key_loop():
     #receive pressed key
-    key = c.recv(1024).decode()
+    key = c.recv(512).decode()
     print(key)
+
+
+#start loop
+l1 = Process(target = screen_loop)
+l1.start()
+key_loop()
+
 
 
 

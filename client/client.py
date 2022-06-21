@@ -3,7 +3,8 @@ import keyboard
 import socket
 import json
 import os
-import threading
+from multiprocessing import Process
+import pygame 
 
 from PIL import Image, ImageFile
 from io import BytesIO
@@ -13,22 +14,6 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 s = socket.socket()
-
-#temp
-import pygame
-
-
-
-
-X = 1280
-Y = 720
-
-
-display_surface = pygame.display.set_mode((X, Y ))
-
-
-
-
 
 v = '0.0.2' #woah
 
@@ -97,21 +82,32 @@ print(
 
 def screen_loop():
     while True:
-        #receive screen shot
-        screen = s.recv(40960)
+        try:
+            #receive screen shot
+            #buffer = s.recv(512).decode()
+            #print(str(buffer))
+            screen = s.recv(102400)
 
-        print(screen)
-        #encode screenshot
-        bytes = bytearray(screen)
+            print(screen)
+            #encode screenshot
+            bytes = bytearray(screen)
 
-        stream = BytesIO(bytes)
+            stream = BytesIO(bytes)
 
-        image = Image.open(stream).convert("RGBA") 
-        stream.close()
-        image.show()
+            image = Image.open(stream).convert("RGBA") 
+            stream.close()
+            image.show()
+            buffer = None
+        except:
+            screen = None
+            bytes = None
+            stream = None 
+            image = None
+            pass
 
-def client_loop():
-    threading.Thread(target=screen_loop).start()
+def key_loop():
+    l1 = Process(target = screen_loop)
+    l1.start()
     while True:
         key = keyboard.read_key()
         if key == None:
@@ -128,10 +124,12 @@ def connect(host, port):
         print("  > Enter valid hostname and port!")
         print(e)
 
-    client_loop()
+    key_loop()
 
-def host(port):
-    print(f"  > Hosting at {port}")
+
+class server():
+    def host(port):
+        print(f"  > Hosting at {port}")
 
 #ansi colors tui
 
@@ -181,7 +179,5 @@ def menu():
                 pass
                 menu()
             
-
-
 #run the menu
 menu()
