@@ -3,9 +3,14 @@ import keyboard
 import socket
 import json
 import os
+import threading
 
-from PIL import Image
+from PIL import Image, ImageFile
 from io import BytesIO
+
+
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 
 s = socket.socket()
 
@@ -90,28 +95,29 @@ print(
     """
 )
 
-
-def client_loop():
-    pygame.init()
+def screen_loop():
     while True:
         #receive screen shot
-        screen = s.recv(1024)
+        screen = s.recv(40960)
 
+        print(screen)
         #encode screenshot
-        stream = BytesIO(screen)
+        bytes = bytearray(screen)
 
-        image = Image.open(stream).convert("RGBA")
+        stream = BytesIO(bytes)
+
+        image = Image.open(stream).convert("RGBA") 
         stream.close()
         image.show()
 
-        """
-        display_surface.blit(pygame.image.load(screen), (0, 0))
-        pygame.display.update()
-        """
-
-        #send pressed key
+def client_loop():
+    threading.Thread(target=screen_loop).start()
+    while True:
         key = keyboard.read_key()
+        if key == None:
+            key = "none"
         s.send(key.encode())
+    
 
 def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
@@ -137,7 +143,6 @@ print(f"{green}  3. Settings {blank}")
 print(f"{yellow}  > {blank}")
 """
 #tui
-
 
 def menu():
     print(f"  > Select (1-3) <")

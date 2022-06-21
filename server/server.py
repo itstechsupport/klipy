@@ -1,7 +1,9 @@
 import pyautogui
 import socket
-from PIL import Image
+import asyncio
+from PIL import Image, ImageFile
 from io import BytesIO
+
 
 s = socket.socket()
 print ("Socket successfully created")
@@ -14,38 +16,21 @@ print ("Socket binded to %s" %(port))
 s.listen(5)
 print ("Socket is listening")
 
-"""
-screen = pyautogui.screenshot()
-screen.save('img.png')
-screen = open('img.png', 'rb')
-scren = screen.read()
-bytes = bytearray(scren)
-
-
-
-stream = BytesIO(bytes)
-
-image = Image.open(stream).convert("RGBA")
-stream.close()
-image.show()
-"""
-
-
 c, addr = s.accept()
 while True:
-
     #encode
     screen = pyautogui.screenshot()
-    screen.save('img.png')
-    screen = open('img.png', 'rb')
+    screen.save("img.jpeg", optimize = True, quality = 5)
+    screen = open('img.jpeg', 'rb')
     scren = screen.read()
     bytes = bytearray(scren)
 
     #send
-    c.send(bytes.encode(1024))
+    c.send(bytes)
 
     #receive pressed key
     key = c.recv(1024).decode()
+    print(key)
 
-    pass
+
 
