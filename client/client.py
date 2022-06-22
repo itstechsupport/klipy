@@ -3,10 +3,12 @@ import keyboard
 import socket
 import json
 import os
-from multiprocessing import Process
-import pygame 
+import threading
 
-from PIL import Image, ImageFile
+from tkinter import * 
+
+
+from PIL import Image, ImageFile, ImageTk
 from io import BytesIO
 
 
@@ -16,6 +18,7 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 s = socket.socket()
 
 v = '0.0.2' #woah
+
 
 
 purple = "\033[0;35m"
@@ -58,7 +61,7 @@ def config_setup():
         print(f"Config found at {config_path}")
         pass
 
-
+config_setup()
 print(
     f"""{purple}
                                                                
@@ -80,12 +83,25 @@ print(
     """
 )
 
-def screen_loop():
+def key_loop():
+    while True:
+        key = keyboard.read_key(suppress=True)
+        if key == None:
+            key = "none"
+        s.send(key.encode())
+tk = Tk()
+
+
+def client_loop(): 
+    key_loop_thread = threading.Thread(target=key_loop)
+    canvas = Canvas(tk, width = 1280, height = 720)
+    canvas.pack() 
+    key_loop_thread.start()
     while True:
         try:
             #receive screen shot
             #buffer = s.recv(512).decode()
-            #print(str(buffer))
+            #print(str(buffer))a
             screen = s.recv(102400)
 
             print(screen)
@@ -94,10 +110,20 @@ def screen_loop():
 
             stream = BytesIO(bytes)
 
-            image = Image.open(stream).convert("RGBA") 
+            image = Image.open(stream)
+            image.save("received.png")
             stream.close()
-            image.show()
+
+            #display image  
+            img = PhotoImage(file="received.png")
+            canvas.create_image(0.01, 0.01, anchor=NW, image=img) 
+            canvas.pack()
+
             buffer = None
+
+
+            #now the keys
+
         except:
             screen = None
             bytes = None
@@ -105,26 +131,19 @@ def screen_loop():
             image = None
             pass
 
-def key_loop():
-    l1 = Process(target = screen_loop)
-    l1.start()
-    while True:
-        key = keyboard.read_key()
-        if key == None:
-            key = "none"
-        s.send(key.encode())
-    
-
 def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
     try:
         s.connect((host, port))
+        tk_inter_thread = threading.Thread(target=client_loop)
+        tk_inter_thread.start()
+        tk.mainloop()
         pass
     except Exception as e:
         print("  > Enter valid hostname and port!")
         print(e)
+        menu()
 
-    key_loop()
 
 
 class server():
