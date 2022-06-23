@@ -42,7 +42,7 @@ def server_loop():
         screen.save('img.jpeg', optimize = True, quality = 25)
         screen = open('img.jpeg', 'rb')
         size = os.path.getsize('img.jpeg')
-        print(size)
+        #print(size)
         #c.send(str(size).encode())
         scren = screen.read()
         bytes = bytearray(scren)

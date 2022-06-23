@@ -4,6 +4,8 @@ import socket
 import json
 import os
 import threading
+import time
+from win32api import GetSystemMetrics
 
 from tkinter import * 
 
@@ -11,15 +13,12 @@ from tkinter import *
 from PIL import Image, ImageFile, ImageTk
 from io import BytesIO
 
-
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
-
+#define some things
 s = socket.socket()
 
 v = '0.0.2' #woah
-
-
 
 purple = "\033[0;35m"
 yellow = "\033[1;33"
@@ -27,61 +26,50 @@ green = "\033[1;36"
 blank = "\033[0m"
 
 appdata = os.getenv('APPDATA')
-config_path = appdata + "\klipy.json"
+config_path = "klipy.json"
+
+#define global config things
+res_multiplayer = 0
+quality = 0
 
 #write and read config from file
 def write_config(arg):
+    print("  > Writting config")
     config = json.dumps(arg)
     try:
         with open(config_path, "w") as f:
             f.write(str(config))
-            print("Successfully writted to config")
+            print("  > Successfully writted to config")
             pass
     except Exception as e:
-        print(f"Couldn't write to config! {e}")
+        print(f"  > Couldn't write to config! {e}")
 
 def read_config():
+    print("  > Reading config")
     try:
+        global res_multiplayer
+        global quality
         config = json.loads(config_path)
-        print("Successfully read config")
+        print("  > Successfully read config")
+        res_multiplayer = config["res_multiplier"]
+        quality = config["quality"]
         
         return config
     except Exception as e:
-        print(f"Couldn't read config! {e}")
+        print(f"  > Couldn't read config! {e}")
         pass
 
 #setup config
 def config_setup():
     if os.path.exists(config_path) == False:
-        print("Config not found, creating config...")
-        config = {"host" : "", "port" : 0, "tps" : 60, "fps" : 0}
+        print("  > Couldn't find config file, creating config file")
+        global config
+        config = {"host" : "", "port" : 0, "res_multiplier" : 0.5, "quality" : 25}
         write_config(config)
         read_config()
     else:
-        print(f"Config found at {config_path}")
+        print(f"  > Config found at {config_path}")
         pass
-
-config_setup()
-print(
-    f"""{purple}
-                                                               
-            .---.                                          
-     .      |   |.--._________   _...._                    
-   .'|      |   ||__|\        |.'      '-. .-.          .- 
- .'  |      |   |.--. \        .'```'.    '.\ \        / / 
-<    |      |   ||  |  \      |       \     \\ \      / /  
- |   | ____ |   ||  |   |     |        |    | \ \    / /   
- |   | \ .' |   ||  |   |      \      /    .   \ \  / /    
- |   |/  .  |   ||  |   |     |\`'-.-'   .'     \ `  /     
- |    /\  \ |   ||__|   |     | '-....-'`        \  /      
- |   |  \  \'---'      .'     '.                 / /       
- '    \  \  \        '-----------'           |`-' /        
-'------'  '---'                               '..'         
-    version: {v}, by tech support#8002
-    {blank}
-    
-    """
-)
 
 def key_loop():
     while True:
@@ -99,12 +87,14 @@ def client_loop():
     key_loop_thread.start()
     while True:
         try:
+
             #receive screen shot
+            fps_start = time.time()
             #buffer = s.recv(512).decode()
             #print(str(buffer))a
             screen = s.recv(102400)
 
-            print(screen)
+            #print(screen)
             #encode screenshot
             bytes = bytearray(screen)
 
@@ -116,8 +106,10 @@ def client_loop():
 
             #display image  
             img = PhotoImage(file="received.png")
-            canvas.create_image(0.01, 0.01, anchor=NW, image=img) 
+            canvas.create_image(1, 1, anchor=NW, image=img) 
             canvas.pack()
+            fps_end = time.time()
+            fps = fps_end - fps_start
 
             buffer = None
 
@@ -130,6 +122,7 @@ def client_loop():
             stream = None 
             image = None
             pass
+        print(f"Info: FPS: {fps * 100}")
 
 def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
@@ -198,5 +191,35 @@ def menu():
                 pass
                 menu()
             
+#init
+print("  > Starting client")
+config_setup()
+read_config()
+res_x = int(GetSystemMetrics(0))
+res_y = int(GetSystemMetrics(1))
+print(f'  > Using display with resolution {res_x} x {res_y}')
+stream_res = (res_x * res_multiplayer, res_y * res_multiplayer)
+print(f'  > Streaming resolution (for server) {stream_res}, with {quality} quality')
+
+print(
+    f"""{purple}
+                                                               
+            .---.                                          
+     .      |   |.--._________   _...._                    
+   .'|      |   ||__|\        |.'      '-. .-.          .- 
+ .'  |      |   |.--. \        .'```'.    \ \ \        / / 
+<    |      |   ||  |  \      |       \    \ \ \      / /  
+ |   | ____ |   ||  |   |     |        |    | \ \    / /   
+ |   | \ .' |   ||  |   |      \      /    .   \ \  / /    
+ |   |/  .  |   ||  |   |     |\`'-.-'   .'     \ `  /     
+ |    /\  \ |   ||__|   |     | '-....-'`        \  /      
+ |   |  \  \'---'      .'     '.                 / /       
+ '    \  \  \        '-----------'           |`-' /        
+'------'  '---'                               '..'         
+    version: {v}, by tech support#8002
+    {blank}
+    
+    """
+)
 #run the menu
 menu()
