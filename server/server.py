@@ -36,13 +36,13 @@ def server_loop():
     key_loop_server_thread = threading.Thread(target=key_loop_server)
     key_loop_server_thread.start()
     while True:
-        #encode
+        #encode frame
         screen = pyautogui.screenshot()
         screen = screen.resize((res_x, res_y))
-        screen.save('img.jpeg', optimize = True, quality = 25)
+        screen.save('img.jpeg', optimize = True, quality = 1)
         screen = open('img.jpeg', 'rb')
         size = os.path.getsize('img.jpeg')
-        #print(size)
+        print(f"Compressed image size: {size}")
         #c.send(str(size).encode())
         scren = screen.read()
         bytes = bytearray(scren)

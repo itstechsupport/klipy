@@ -77,59 +77,61 @@ def key_loop():
         if key == None:
             key = "none"
         s.send(key.encode())
+
 tk = Tk()
-
-
 def client_loop(): 
     key_loop_thread = threading.Thread(target=key_loop)
-    canvas = Canvas(tk, width = 1280, height = 720)
+    canvas = Canvas(tk, width=1280, height=720)
     canvas.pack() 
     key_loop_thread.start()
     while True:
         try:
 
-            #receive screen shot
-            fps_start = time.time()
+            #receive frame
             #buffer = s.recv(512).decode()
             #print(str(buffer))a
             screen = s.recv(102400)
 
             #print(screen)
-            #encode screenshot
+            #decode frame
             bytes = bytearray(screen)
 
             stream = BytesIO(bytes)
 
             image = Image.open(stream)
-            image.save("received.png")
-            stream.close()
+            #image.resize(image.width * 2, image.height * 2)
+            #tk_image = ImageTk.PhotoImage(image)
+            #image.save("received.png")
+            #stream.close()
+            fps_start = time.time()
+            
 
-            #display image  
-            img = PhotoImage(file="received.png")
-            canvas.create_image(1, 1, anchor=NW, image=img) 
-            canvas.pack()
+            #display frame 
+            tk_image = ImageTk.PhotoImage(image)
+            #image_label = Label(canvas, image=tk_image)
+            #image_label.pack()
+            canvas.create_image(1, 1, anchor=NW, image=tk_image)
             fps_end = time.time()
             fps = fps_end - fps_start
-
+            print(f"Info: FPS: {fps * 1000}")
             buffer = None
-
 
             #now the keys
 
-        except:
+        except Exception as e:
+            print(e)
             screen = None
             bytes = None
             stream = None 
             image = None
             pass
-        print(f"Info: FPS: {fps * 100}")
 
 def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
     try:
         s.connect((host, port))
-        tk_inter_thread = threading.Thread(target=client_loop)
-        tk_inter_thread.start()
+        client_loop_thread = threading.Thread(target=client_loop)
+        client_loop_thread.start()
         tk.mainloop()
         pass
     except Exception as e:
