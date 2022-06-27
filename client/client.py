@@ -1,3 +1,7 @@
+import chunk
+from re import T
+from turtle import st
+from typing_extensions import Self
 import pyautogui
 import keyboard
 import socket
@@ -6,8 +10,9 @@ import os
 import threading
 import time
 from win32api import GetSystemMetrics
+import struct
 
-from tkinter import * 
+from tkinter import Label, Tk, Canvas, NW
 
 
 from PIL import Image, ImageFile, ImageTk
@@ -71,75 +76,72 @@ def config_setup():
         print(f"  > Config found at {config_path}")
         pass
 
-def key_loop():
-    while True:
-        key = keyboard.read_key(suppress=True)
-        if key == None:
-            key = "none"
-        s.send(key.encode())
+class client():
+    buffer = 102400
+    def key_loop(self):
+        while True:
+            key = keyboard.read_key(suppress=True)
+            #print(key)
+            if key == None:
+                key = "none"
+            s.send(key.encode())
+    
+    def buffer_loop(self):
+        while True:
+            global buffer
+            buffer = int(s.recv(1024))
 
-tk = Tk()
-def client_loop(): 
-    key_loop_thread = threading.Thread(target=key_loop)
-    canvas = Canvas(tk, width=1280, height=720)
-    canvas.pack() 
-    key_loop_thread.start()
-    while True:
-        try:
+    def screen_loop(self): 
+        while True:
+            try:
+                #start_time = time.perf_counter()
 
-            #receive frame
-            #buffer = s.recv(512).decode()
-            #print(str(buffer))a
-            screen = s.recv(102400)
+                #receive screen
+                screen = s.recv(102400)
+                bytes = bytearray(screen)
+                stream = BytesIO(bytes)
+                image = Image.open(stream)
 
-            #print(screen)
-            #decode frame
-            bytes = bytearray(screen)
+                print()
+                print(screen)
 
-            stream = BytesIO(bytes)
+                #display frame 
+                tk_image = ImageTk.PhotoImage(image)
+                canvas.create_image(1, 1, anchor=NW, image=tk_image)
+                canvas.pack()
+                
+                #end_time = time.perf_counter()
+                #_time = round(end_time - start_time, 4)
+                #print(f"Info: time: {_time}, Buffer size: {str(buffer)}")
+                buffer = None
+                
+            except Exception as e:
+                print(e)
+                pass
 
-            image = Image.open(stream)
-            #image.resize(image.width * 2, image.height * 2)
-            #tk_image = ImageTk.PhotoImage(image)
-            #image.save("received.png")
-            #stream.close()
-            fps_start = time.time()
-            
-
-            #display frame 
-            tk_image = ImageTk.PhotoImage(image)
-            #image_label = Label(canvas, image=tk_image)
-            #image_label.pack()
-            canvas.create_image(1, 1, anchor=NW, image=tk_image)
-            fps_end = time.time()
-            fps = fps_end - fps_start
-            print(f"Info: FPS: {fps * 1000}")
-            buffer = None
-
-            #now the keys
-
-        except Exception as e:
-            print(e)
-            screen = None
-            bytes = None
-            stream = None 
-            image = None
-            pass
+    def __init__(self):
+        print("a")
+        global tk
+        tk = Tk()
+        threading.Thread(target=self.key_loop).start()
+        #threading.Thread(target=self.buffer_loop).start()
+        threading.Thread(target=self.screen_loop).start()
+        
+        global canvas
+        canvas = Canvas(tk, width=1280, height=720)
 
 def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
     try:
         s.connect((host, port))
-        client_loop_thread = threading.Thread(target=client_loop)
-        client_loop_thread.start()
+        
+        client()
         tk.mainloop()
         pass
     except Exception as e:
         print("  > Enter valid hostname and port!")
         print(e)
         menu()
-
-
 
 class server():
     def host(port):
@@ -225,3 +227,5 @@ print(
 )
 #run the menu
 menu()
+
+input()
