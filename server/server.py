@@ -1,4 +1,9 @@
+from ast import excepthandler
+from base64 import encode
+from inspect import isdatadescriptor
+from operator import truediv
 import secrets
+from sys import byteorder
 import pyautogui
 import socket
 import asyncio
@@ -7,6 +12,7 @@ from io import BytesIO
 import os
 import threading
 from win32api import GetSystemMetrics, NameDisplay
+import struct
 
 s = socket.socket()
 
@@ -26,37 +32,56 @@ c, addr = s.accept()
 print(f'  > Got connection form {addr}')
 
 
-def key_loop_server():
-    while True:
-        key = c.recv(512).decode()
-        print(key)
+class server:
+    size = 102400
+    def key_loop(self):
+        while True:
+            try:
+                key = c.recv(512).decode()
+                print(key)
+            except Exception as e:
+                #print("  > Couldn't receive key, skipping!")
+                pass
 
 
-def server_loop():
-    key_loop_server_thread = threading.Thread(target=key_loop_server)
-    key_loop_server_thread.start()
-    while True:
-        #encode frame
-        screen = pyautogui.screenshot()
-        screen = screen.resize((res_x, res_y))
-        screen.save('img.jpeg', optimize = True, quality = 1)
-        screen = open('img.jpeg', 'rb')
-        size = os.path.getsize('img.jpeg')
-        print(f"Compressed image size: {size}")
-        #c.send(str(size).encode())
-        scren = screen.read()
-        bytes = bytearray(scren)
+    def buffer_loop(self):
+        while True:
+            try:
+                size = os.stat('img.jpeg').st_size
+                size_str = str(size)
+                c.send(size_str.encode())
+            except Exception as e:
+                print(f"  > Couldn't send dynamic buffer, sending 102400 buffer! {e}")
+                c.send(size)
 
-        c.send(bytes)
+    def screen_loop(self):
+        while True:
+            #try:
+                #take screenshot
+                screen = pyautogui.screenshot()
+                screen = screen.resize((res_x, res_y))
+                screen.save('img.jpeg', optimize = True, quality = 25)
 
-        #receive pressed key
+                #encode frame
+                screen = open('img.jpeg', 'rb')
+                screen_read = screen.read()
 
+                
+                bytes = bytearray(screen_read)
 
+                c.send(bytes)
+            #except Exception as e:
+            #    print(f"  > Something went wrong! {e}")
 
+    def __init__(self):
+        print("a")
+        threading.Thread(target=self.key_loop).start()
+        #threading.Thread(target=self.buffer_loop).start()
+        threading.Thread(target=self.screen_loop).start()
+    
 
-
-#start server loop
-server_loop()
+server()
+input()
 
 
 
