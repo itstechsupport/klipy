@@ -1,7 +1,3 @@
-import chunk
-from re import T
-from turtle import st
-from typing_extensions import Self
 import pyautogui
 import keyboard
 import socket
@@ -10,7 +6,6 @@ import os
 import threading
 import time
 from win32api import GetSystemMetrics
-import struct
 
 from tkinter import Label, Tk, Canvas, NW
 
@@ -25,17 +20,21 @@ s = socket.socket()
 
 v = '0.0.2' #woah
 
+#define some useless colors
 purple = "\033[0;35m"
 yellow = "\033[1;33"
 green = "\033[1;36"
 blank = "\033[0m"
 
+#set config path
 appdata = os.getenv('APPDATA')
 config_path = "klipy.json"
 
 #define global config things
 res_multiplayer = 0
 quality = 0
+
+#config doesn't work
 
 #write and read config from file
 def write_config(arg):
@@ -102,9 +101,6 @@ class client():
                 stream = BytesIO(bytes)
                 image = Image.open(stream)
 
-                print()
-                print(screen)
-
                 #display frame 
                 tk_image = ImageTk.PhotoImage(image)
                 canvas.create_image(1, 1, anchor=NW, image=tk_image)
@@ -120,7 +116,6 @@ class client():
                 pass
 
     def __init__(self):
-        print("a")
         global tk
         tk = Tk()
         threading.Thread(target=self.key_loop).start()
@@ -143,6 +138,7 @@ def connect(host, port):
         print(e)
         menu()
 
+#get the client and server run in one app one day...
 class server():
     def host(port):
         print(f"  > Hosting at {port}")
