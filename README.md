@@ -1,3 +1,3 @@
 # Klipy
- Screen-sharing tool
+ Low-latency, open source screen sharing tool.
  
