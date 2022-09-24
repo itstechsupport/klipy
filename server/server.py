@@ -1,18 +1,11 @@
-from ast import excepthandler
-from base64 import encode
-from inspect import isdatadescriptor
-from operator import truediv
-import secrets
-from sys import byteorder
 import pyautogui
 import socket
 import asyncio
-from PIL import Image, ImageFile, ImageTk
-from io import BytesIO
+import PIL.Image, PIL.ImageFile, PIL.ImageTk
 import os
 import threading
+from io import BytesIO
 from win32api import GetSystemMetrics, NameDisplay
-import struct
 
 s = socket.socket()
 
@@ -42,6 +35,7 @@ class server:
                 #send it 
                 key = c.recv(512).decode()
                 print(key)
+                pyautogui.write(key)
             except Exception as e:
                 pass
 
@@ -62,18 +56,18 @@ class server:
         while True:
             try:
                 #take screenshot
-                screen = pyautogui.screenshot()
-                screen = screen.resize((res_x, res_y))
+                frame = pyautogui.screenshot()
+                frame = frame.resize((res_x, res_y))
+                frame_ = BytesIO()
+                frame.save(frame_, format="JPEG", optimize = True, quality = 25)
+                frame = PIL.Image.open(frame_)
 
-                screen_mem = BytesIO()
-                screen.save(screen_mem, optimize = True, quality = 25)
+                #frame = open(frame_, 'rb')
 
                 #encode frame
-                screen = open(BytesIO())
-                screen_read = screen.read()
-
+                frame_.seek(0)
                 
-                bytes = bytearray(screen_read)
+                bytes = bytearray(frame_.read())
 
                 c.send(bytes)
             except Exception as e:
@@ -88,7 +82,3 @@ class server:
 #run server class
 server()
 input()
-
-
-
-

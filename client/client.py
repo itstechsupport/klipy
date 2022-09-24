@@ -4,8 +4,9 @@ import socket
 import json
 import os
 import threading
-import time
 from win32api import GetSystemMetrics
+
+import sys
 
 from tkinter import Label, Tk, Canvas, NW
 
@@ -100,11 +101,15 @@ class client():
                 bytes = bytearray(screen)
                 stream = BytesIO(bytes)
                 image = Image.open(stream)
-
-                #display frame 
-                tk_image = ImageTk.PhotoImage(image)
-                canvas.create_image(1, 1, anchor=NW, image=tk_image)
-                canvas.pack()
+                size = int(sys.getsizeof(stream))
+                print(image)
+                #display frame
+                if size >= 100:
+                    tk_image = ImageTk.PhotoImage(image)
+                    canvas.create_image(1, 1, anchor=NW, image=tk_image)
+                    canvas.pack()
+                else:
+                    pass
                 
                 #end_time = time.perf_counter()
                 #_time = round(end_time - start_time, 4)
