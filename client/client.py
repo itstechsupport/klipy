@@ -16,6 +16,8 @@ from io import BytesIO
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+
+
 #define some things
 s = socket.socket()
 
@@ -94,9 +96,6 @@ class client():
     def screen_loop(self): 
         while True:
             try:
-                #start_time = time.perf_counter()
-
-                #receive screen
                 screen = s.recv(102400)
                 bytes = bytearray(screen)
                 stream = BytesIO(bytes)
@@ -111,11 +110,6 @@ class client():
                 else:
                     pass
                 
-                #end_time = time.perf_counter()
-                #_time = round(end_time - start_time, 4)
-                #print(f"Info: time: {_time}, Buffer size: {str(buffer)}")
-                buffer = None
-                
             except Exception as e:
                 print(e)
                 pass
@@ -123,7 +117,7 @@ class client():
     def __init__(self):
         global tk
         tk = Tk()
-        threading.Thread(target=self.key_loop).start()
+        #threading.Thread(target=self.key_loop).start()
         #threading.Thread(target=self.buffer_loop).start()
         threading.Thread(target=self.screen_loop).start()
         
@@ -134,7 +128,6 @@ def connect(host, port):
     print(f"  > Connecting to {host}:{port}")
     try:
         s.connect((host, port))
-        
         client()
         tk.mainloop()
         pass
@@ -143,21 +136,6 @@ def connect(host, port):
         print(e)
         menu()
 
-#get the client and server run in one app one day...
-class server():
-    def host(port):
-        print(f"  > Hosting at {port}")
-
-#ansi colors tui
-
-"""
-print(f"{yellow}  > What now? <{blank}")
-print(f"{green}  1. Connect {blank}")
-print(f"{green}  2. Host {blank}")
-print(f"{green}  3. Settings {blank}")
-print(f"{yellow}  > {blank}")
-"""
-#tui
 
 def menu():
     print(f"  > Select (1-3) <")

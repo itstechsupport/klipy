@@ -6,6 +6,9 @@ import os
 import threading
 from io import BytesIO
 from win32api import GetSystemMetrics, NameDisplay
+import dxcam
+
+ss = dxcam.create()
 
 s = socket.socket()
 
@@ -32,6 +35,7 @@ class server:
     def key_loop(self):
         while True:
             try:
+                print("key loop")
                 #send it 
                 key = c.recv(512).decode()
                 print(key)
@@ -55,16 +59,13 @@ class server:
     def screen_loop(self):
         while True:
             try:
+                print("screen loop")
                 #take screenshot
-                frame = pyautogui.screenshot()
+                frame = PIL.Image.fromarray(ss.grab())
                 frame = frame.resize((res_x, res_y))
                 frame_ = BytesIO()
                 frame.save(frame_, format="JPEG", optimize = True, quality = 25)
                 frame = PIL.Image.open(frame_)
-
-                #frame = open(frame_, 'rb')
-
-                #encode frame
                 frame_.seek(0)
                 
                 bytes = bytearray(frame_.read())
@@ -74,8 +75,7 @@ class server:
                 print(f"  > Something went wrong! {e}")
 
     def __init__(self):
-        print("a")
-        threading.Thread(target=self.key_loop).start()
+        #threading.Thread(target=self.key_loop).start()
         #threading.Thread(target=self.buffer_loop).start()
         threading.Thread(target=self.screen_loop).start()
     
