@@ -1,4 +1,3 @@
-import pyautogui
 import keyboard
 import socket
 import json
